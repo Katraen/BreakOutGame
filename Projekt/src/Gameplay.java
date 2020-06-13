@@ -1,4 +1,3 @@
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -13,7 +12,7 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
     private boolean play = false; //gra nie powina rozpoczynać sie sama
     private int score = 0; // początkowa ilość pnktów
 
-    private int totalBriks = 105;
+    private int totalBriks = 1;
 
     private Timer timer;
     private int delay = 8;
@@ -26,42 +25,65 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
     private int ballYdir = -2;
 
     private MapGenerator map;
+    private Menu menu;
+
+    public enum STATE {
+        MENU,
+        GAME
+    }
+
+    static public STATE state = STATE.MENU;
+
+    static public int ROWS;
+    static public int COLUMNS;
 
     public Gameplay() {
-        map = new MapGenerator(6,15);
+        menu = new Menu();
         addKeyListener(this);
+        addMouseListener(menu);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
         timer = new Timer(delay, this);
         timer.start();
     }
 
-    public void paint(Graphics g){
+    public void paint(Graphics g) {
         //tło
         g.setColor((black));
         g.fillRect(1,1,692, 592);
 
-        //rysowanie mapy
-        map.draw((Graphics2D)g);
+        if (state == STATE.MENU) {
+            menu.render(g);
+        } else if (state == STATE.GAME) {
+            //generaownie mapy na podstawie przycisku
+            if (map == null) {
+                map = new MapGenerator(ROWS, COLUMNS);
+                totalBriks = ROWS * COLUMNS;
+                play = true;
+            }
 
-        //ramki
-        g.setColor((yellow));
-        g.fillRect(0,0,3,592);
-        g.fillRect(0,0,692,3);
-        g.fillRect(691,0,3,592);
+            //rysowanie mapy
+            map.draw((Graphics2D) g);
 
-        //punkty
-        g.setColor(Color.white);
-        g.setFont(new Font("serif", Font.BOLD, 25));
-        g.drawString("" + score, 592, 30);
+            //ramki
+            g.setColor((yellow));
+            g.fillRect(0, 0, 3, 592);
+            g.fillRect(0, 0, 692, 3);
+            g.fillRect(691, 0, 3, 592);
 
-        //tacka
-        g.setColor((green));
-        g.fillRect(playerX, 550,100,8);
+            //punkty
+            g.setColor(Color.white);
+            g.setFont(new Font("serif", Font.BOLD, 25));
+            g.drawString("" + score, 592, 30);
 
-        //piłka
-        g.setColor((yellow));
-        g.fillOval(ballposX, ballposY,20,20);
+            //tacka
+            g.setColor((green));
+            g.fillRect(playerX, 550, 100, 8);
+
+            //piłka
+            g.setColor((yellow));
+            g.fillOval(ballposX, ballposY, 5, 5);
+        }
 
         if (totalBriks <= 0) {
             play = false;
@@ -95,12 +117,12 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
     public void actionPerformed(ActionEvent e) {
         timer.start();
 
-        if(play){
-            if(new Rectangle(ballposX, ballposY, 20, 20).intersects(new Rectangle(playerX, 550,100, 8))){
+        if (play) {
+            if (new Rectangle(ballposX, ballposY, 5, 5).intersects(new Rectangle(playerX, 550,100, 8))) {
                 ballYdir = -ballYdir;
             }
 
-            A: for(int i = 0; i < map.map.length; i++) {
+            A: for (int i = 0; i < map.map.length; i++) {
                 for (int j = 0; j < map.map[0].length; j++) {
                     if (map.map[i][j] > 0) {
                         int brickX = j * map.brickWidth + 80;
@@ -108,16 +130,15 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
                         int brickWidth = map.brickWidth;
                         int brickHeight = map.brickHeight;
 
-                        Rectangle rect = new Rectangle(brickX, brickY, brickWidth, brickHeight);
-                        Rectangle ballRect = new Rectangle(ballposX, ballposY, 20,20);
-                        Rectangle brickRect = rect;
+                        Rectangle brickRect = new Rectangle(brickX, brickY, brickWidth, brickHeight);
+                        Rectangle ballRect = new Rectangle(ballposX, ballposY, 5,5);
 
-                        if(ballRect.intersects(brickRect)) {
+                        if (ballRect.intersects(brickRect)) {
                             map.setBrickValue(0, i, j);
                             totalBriks--;
                             score += 5;
 
-                            if (ballposX + 19 <= brickRect.x || ballposX + 1 >= brickRect.x + ballRect.width) {
+                            if (ballposX + 4 <= brickRect.x || ballposX + 1 >= brickRect.x + ballRect.width) {
                                 ballXdir = -ballXdir;
                             } else {
                                 ballYdir = -ballYdir;
@@ -131,13 +152,16 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
 
             ballposX += ballXdir;
             ballposY += ballYdir;
-            if(ballposX < 0){
+
+            if(ballposX < 0) {
                 ballXdir = -ballXdir;
             }
-            if(ballposY < 0){
+
+            if(ballposY < 0) {
                 ballYdir = -ballYdir;
             }
-            if(ballposX > 670){
+
+            if(ballposX > 670) {
                 ballXdir = -ballXdir;
             }
         }
@@ -145,41 +169,42 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
         repaint();
     }
 
-    //nie potrzebuję używać tych metod, ale są wymaane do poprawnego działania programu
+    //nie potrzebuję używać tych metod, ale są wymagane do poprawnego kompilowania programu
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) { }
+
     @Override
-    public void keyReleased(KeyEvent e) {}
+    public void keyReleased(KeyEvent e) { }
 
     @Override
     public void keyPressed(KeyEvent e) {
         //sterowanie piłką i onrola wychodzenia poza pole
-        if(e.getKeyCode() == KeyEvent.VK_RIGHT){
-            if(playerX >= 600){
+        if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+            if (playerX >= 600) {
                 playerX = 600;
-            } else{
+            } else {
                 moveRight();
             }
         }
-        if(e.getKeyCode() == KeyEvent.VK_LEFT){
-            if(playerX < 10){
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            if (playerX < 10) {
                 playerX = 10;
-            } else{
+            } else {
                 moveLeft();
             }
         }
 
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
             if (!play) {
-                play =true;
                 ballposX = 120;
                 ballposY = 350;
                 ballXdir = -1;
                 ballYdir = -2;
                 playerX = 310;
                 score = 0;
-                totalBriks = 105;
-                map = new MapGenerator(6,15);
+
+                state = STATE.MENU;
+                map = null;
 
                 repaint();
             }
@@ -190,6 +215,7 @@ public class Gameplay extends JPanel implements KeyListener, ActionListener {
         play = true;
         playerX += 20;
     }
+
     public void moveLeft() {
         play = true;
         playerX -= 20;

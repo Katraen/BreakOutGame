@@ -16,31 +16,26 @@ public class MapGenerator {
         brickHeight = 150/row;
     }
 
-    public void draw (Graphics2D g){
+    public void draw (Graphics2D g) {
         for (int i = 0; i < map.length; i++){
             for (int j = 0; j < map[0].length; j++){
                 if(map[i][j] > 0) {
-                    if (i == 0){
+                    if (i%6 == 0){
                         Color myRed = new Color (255, 0, 24);
                         g.setColor(myRed);
-                    }
-                    else if (i==1){
+                    } else if (i%6 == 1) {
                         Color myOrange = new Color (255, 165, 44);
                         g.setColor(myOrange);
-                    }
-                    else if (i==2){
+                    } else if (i%6 == 2) {
                         Color myYellow = new Color (255, 255, 65);
                         g.setColor(myYellow);
-                    }
-                    else if (i==3){
+                    } else if (i%6 == 3) {
                         Color myGreen = new Color (0, 128, 24);
                         g.setColor(myGreen);
-                    }
-                    else if (i==4){
+                    } else if (i%6 == 4) {
                         Color myBlue = new Color (0, 0, 249);
                         g.setColor(myBlue);
-                    }
-                    else{
+                    } else if (i%6 == 5) {
                         Color myViolet = new Color (134, 0, 125);
                         g.setColor(myViolet);
                     }
@@ -55,10 +50,8 @@ public class MapGenerator {
         }
     }
 
-    public void setBrickValue(int value, int row, int col){
+    public void setBrickValue(int value, int row, int col) {
         map[row][col] = value;
-
-
     }
 
 }
